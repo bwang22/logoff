@@ -1,2 +1,2 @@
 # logoff
-issues
+submit issues in this repo for logoffmovement.azurewebsites.net
