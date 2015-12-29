@@ -1,0 +1,1585 @@
+
+function isSignedOut()
+{
+    $.ajax({
+        type: "POST",
+        url: "/Home/isSignedOut",
+        data: { },
+        success: function (data) {
+            if(data == "true")
+                localStorage.removeItem("logintoken");
+        },
+        traditional: true
+    });
+}
+function getProfileId()
+{
+    $.ajax({
+        type: "POST",
+        url: "/Home/getProfileId",
+        data: {},
+        success: function (data) {
+            window.profileid = data;
+            checkunreadmsgfeed(data);
+            //console.log(data);
+            getPrayers();
+        },
+        traditional: true
+    });
+}
+function getProfileIdPartner() {
+    $.ajax({
+        type: "POST",
+        url: "/Home/getProfileId",
+        data: {},
+        success: function (data) {
+            window.profileid = data;
+            checkunreadmsgfeed(data);
+        },
+        traditional: true
+    });
+}
+function getUserName(profileid) {
+    if (profileid == null)
+        profileid = -1;
+    $.ajax({
+        type: "POST",
+        url: "/Home/getUserName",
+        data: {profileid: profileid},
+        success: function (data) {
+            window.username = data;
+        },
+        traditional: true
+    });
+}
+function getCurrentLocation() {
+    $.ajax({
+        type: "POST",
+        url: "/Home/getCurrentLocation",
+        data: {},
+        success: function (data) {
+            window.currentlocation = data;
+        },
+        traditional: true
+    });
+}
+function getLocationURL()
+{
+    if (window.location.href.indexOf("?lat=") == -1)
+        getLocation();
+}
+function isSignedIn() {
+    $.ajax({
+        type: "POST",
+        url: "/Home/isSignedInLocation",
+        data: {},
+        success: function (data) {
+            //console.log(data);
+            if (data == "false")
+                getLocation();
+        },
+        traditional: true
+    });
+}
+function getLoginToken()
+{
+    $.ajax({
+        type: "POST",
+        url: "/Home/getToken",
+        data: {},
+        success: function (data) {
+            localStorage.setItem("logintoken", data);
+        },
+        traditional: true
+    });
+}
+///////////////Map Stuff//////////////////////////////
+function getMapPins() {
+        $.ajax({
+            type: "POST",
+            url: "/Home/getPins",
+            data: {},
+            contentType: "application/json; charset=utf-8",
+            success: function (data) {
+                //console.log(data);
+                window.beaches = data;
+            },
+            traditional: true
+        });
+}
+
+function getMapPinsRed() {
+    $.ajax({
+        type: "POST",
+        url: "/Home/getPinsRed",
+        data: {},
+        contentType: "application/json; charset=utf-8",
+        success: function (data) {
+            window.beachesred = data;
+        },
+        traditional: true
+    });
+}
+
+function getMapPinsStar() {
+    $.ajax({
+        type: "POST",
+        url: "/Home/getPinsStar",
+        data: {},
+        contentType: "application/json; charset=utf-8",
+        success: function (data) {
+            window.beachesgs = data;
+            //console.log(beachesgs);
+        },
+        traditional: true
+    });
+}
+
+function getlatlng() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(showPosition1);
+    } else {
+        alert("Geolocation is not supported by this browser.");
+    }
+}
+function showPosition1(position) {
+    if (window.location.href.indexOf("Partner") == -1)
+    {
+        getMapPinsStar();
+        getMapPins();
+    }
+    getMapPinsRed();
+    //google.maps.event.addDomListener(window, 'load', initialize);
+    google.maps.event.addDomListener(window, 'load', initMap(position.coords.latitude, position.coords.longitude));
+}
+
+function initMap(lat, lng) {
+    window.reprayid;
+    window.markers = [];
+    window.markersred = [];
+    window.markersgreenstar = [];
+
+    window.ismobile = true;
+    window.mapOptions = {
+        zoom: 15,
+
+        center: new google.maps.LatLng(lat, lng)
+
+    };
+    window.map = new google.maps.Map(document.getElementById("map-canvas"), window.mapOptions);
+    setTimeout('init(window.mapOptions);', 2000);
+}
+////////////////////////////////////////////////////////////////////////Sign Up//////////////////////////////////////////////////////
+function login(email, password)
+{
+    $.ajax({
+        type: "POST",
+        url: "/Account/JsonLogin",
+        data: { email: email, password: password, returnUrl: "/Home" },
+        success: function (json) {
+            if (json.success == false)
+            {
+                alert(json["errors"][0]);
+            }
+            if (json.isRedirect) {
+                window.location.href = "/";
+            }
+        },
+        traditional: true
+    });
+}
+function forgotpass(email)
+{
+    $.ajax({
+        type: "POST",
+        url: "/Account/ForgotPass",
+        data: { email: email },
+        success: function (data) {
+            console.log(data);
+            alert(data);
+        },
+        traditional: true
+    });
+}
+
+function submitBio(profile, affiliate, zipcode, sex, homeless, tutor,  food, crime, water, vet, old, lovemessage,volunteer, talentmessage, donate, email, fullname, password) {
+    $.ajax({
+        type: "POST",
+        url: "/Account/JsonRegister",
+        data: { email: email, fullname: fullname, password: password, profile: profile, affiliate: affiliate, zipcode: zipcode, sex: sex, homeless: homeless, tutor: tutor,  food: food,
+            crime: crime, water: water, vet: vet, old: old, lovemessage: lovemessage, volunteer: volunteer, talentmessage: talentmessage, donate: donate },
+        success: function (data) {
+            console.log(data);
+            location.href = "/";
+        },
+        traditional: true
+    });
+}
+//removed some items
+function updateBio(affiliate, zipcode, sex, homeless, tutor, food, crime, water, vet, old, lovemessage, volunteer, talentmessage, donate) {
+    $.ajax({
+        type: "POST",
+        url: "/Home/UpdateBio",
+        data: {
+           affiliate: affiliate, zipcode: zipcode, sex: sex, homeless: homeless, tutor: tutor, food: food,
+            crime: crime, water: water, vet: vet, old: old, lovemessage: lovemessage, volunteer: volunteer, talentmessage: talentmessage, donate: donate
+        },
+        success: function (data) {
+            console.log(data);
+        },
+        error: function () { console.log("updatebio"); },
+        traditional: true
+    });
+    /*$.ajax({
+        type: "POST",
+        url: "/Home/UpdateImage",
+        data: {
+            imageurl: imageurl
+        },
+        success: function (data) {
+            console.log(data);
+        },
+        error: function () { console.log("updateimage"); },
+        traditional: true
+    });*/
+}
+
+////////////////////////////////////////Feed/////////////////////////////////
+function insertNamePlace()
+{
+    getCurrentLocation();
+    $.ajax({
+        type: "POST",
+        url: "/Home/getUserName",
+        data: {profileid: -1},
+        success: function (data) {
+            window.username = data;
+            $.ajax({
+                type: "POST",
+                url: "/Home/getCurrentLocation",
+                data: {},
+                success: function (data1) {
+                    window.currentlocation = formatAddress1(data1);
+                    $('.repray-post').find('.wrapper p').html('<span>' + window.username + '</span> <span>reprayed in <br />' + window.currentlocation + '.</span>');
+                    $('.template-prayer').find('.block-id').html('<span>' + window.username + '</span> <span>prayed in <br />' + window.currentlocation + '.</span>');
+                    $('.new-post').find('.wrapper p span:first').text(window.username);
+                },
+                traditional: true
+            });
+        },
+        traditional: true
+    });
+}
+function parseDate(input) {
+    // new Date(year, month [, day [, hours[, minutes[, seconds[, ms]]]]])
+    return new Date(input.substring(0, 4), parseInt(input.substring(4, 6)) - 1, input.substring(6, 8), input.substring(8, 10), input.substring(10, 12), input.substring(12, 14)); // Note: months are 0-based
+}
+function ParseTime(data) {
+    var date = parseDate(data);
+    var iOS = /iPad|iPhone|iPod/.test(navigator.platform);
+    var seconds;
+    if(iOS)
+        seconds = Math.floor((new Date() - date) / 1000) + 18000 + 10820;
+    else
+        seconds = Math.floor((new Date() - date) / 1000) + 18000;
+
+    var interval = Math.floor(seconds / 31536000);
+
+    if (interval > 1) {
+        return interval + " years ago";
+    }
+    interval = Math.floor(seconds / 2592000);
+    if (interval > 1) {
+        return interval + " months ago";
+    }
+    interval = Math.floor(seconds / 86400);
+    if (interval > 1) {
+        return interval + " days ago";
+    }
+    interval = Math.floor(seconds / 3600);
+    if (interval > 1) {
+        return interval + " hrs ago";
+    }
+    interval = Math.floor(seconds / 60);
+    if (interval > 1) {
+        return interval + " mins ago";
+    }
+    return Math.floor(seconds) + " secs ago";
+}
+function ParseTimeOld(datetime) { 
+    return datetime.substring(4, 6) + "/" + datetime.substring(6, 8) + "/" + datetime.substring(0, 4) + " " + datetime.substring(8, 10) + ":" + datetime.substring(10, 12);
+}
+function ParseAddressCityState(address)
+{
+    var splitadd = address.split(',');
+    return splitadd[1].substr(1) + "," + splitadd[2].substring(0, 3);
+}
+//////////////////TEMP EDIT WITH class="share"//////////////////
+function renderprayers(data) {
+    for (a = 0; a < data["prayer"].length; a++) {
+        if (data["prayer"][a]["TypeOfMsg"] == "prayerrequestresponse" || data["prayer"][a]["TypeOfMsg"] == "prayerrequest") {
+            var prayerhtml = '<div class="prayer-block block-3';
+            if (data["prayer"][a]["UserId"] == window.profileid)
+                prayerhtml += " block-1";
+            prayerhtml += '" id="' + data["prayer"][a]["Id"] + '">\
+                                <!-- re prayer block-->\
+\
+                                <div class="delete-post-block">\
+                                    <!-- other prayer block-->\
+                                    <div class="wrapper">\
+                                        <p>Are you sure want to delete this post?</p>\
+                                        <div>yes</div> <div>no</div>\
+                                    </div>\
+                                </div>\
+\
+                                <a href="/Profile/Profile?profileid=' + data["prayer"][a]["UserId"] + '"><img class="display-pic" src="' + data["pictureurl"][a] + '" alt="display image" /></a>\
+                                <img class="uni" src="/images/repray2-icon.svg" alt="universal icon" style="display: block;">';
+            if (data["prayer"][a]["UserId"] == window.profileid)
+                prayerhtml += '<img class="delete-post" src="../images/cancel-icon-grey.svg" alt="edit post" />';
+            prayerhtml += '<p class="block-id"><span>' + data["name"][a] + '</span><span> prayed in <br /> ' + ParseAddressCityState(data["prayer"][a]["Address"]) + ', ' + ParseTime(data["prayer"][a]["TimeStamp"]) + '</span></p>\
+                                <div class="repray-fill">' + data["prayer"][a]["RePrayerMsg"] + '</div>\
+\
+                                <p class="prayer-text"> ' + data["prayer"][a]["ChatMessage"] + '</p>\
+\
+                                <div class="dot-line"></div>\
+\
+                                <ul class="extras">\
+<li class="sharef"><img src="../images/facebook-btn.svg" alt="facebook social" /></li>\
+                                    <li class="sharet"><img src="../images/twitter-btn.svg" alt="twitter social" /></li>\
+                                    <li><img src="../images/repray-icon.svg" alt="Repray" /><span>' + data["repraycount"][a] + '</span></li>\
+                                    <li><img src="../images/hi-five-icon.svg" alt="Hi Five" /><span>' + data["highfivecount"][a] + '</span></li>\
+                                </ul>\
+\
+                                <div style="clear:both;"></div>\
+\
+                                <div class="all-likes" style="display:none;">\
+                                </div>\
+                                \
+                            </div><!-- end of other prayer block-->';
+            $(prayerhtml).insertAfter(".populate");
+        }
+        else if (data["prayer"][a]["TypeOfMsg"] == "prayer") {
+            var prayerhtml = '<div class="prayer-block block-3';
+            if (data["prayer"][a]["UserId"] == window.profileid)
+                prayerhtml += " block-1";
+            prayerhtml += '" id="' + data["prayer"][a]["Id"] + '">\
+                                <!-- re prayer block-->\
+\
+                                <div class="delete-post-block">\
+                                    <!-- other prayer block-->\
+                                    <div class="wrapper">\
+                                        <p>Are you sure want to delete this post?</p>\
+                                        <div>yes</div> <div>no</div>\
+                                    </div>\
+                                </div>\
+\
+                                <a href="/Profile/Profile?profileid=' + data["prayer"][a]["UserId"] + '"><img class="display-pic" src="' + data["pictureurl"][a] + '" alt="display image" /></a>';
+            if (data["prayer"][a]["UserId"] == window.profileid)
+                prayerhtml += '<img class="delete-post" src="../images/cancel-icon-grey.svg" alt="edit post" />';
+            prayerhtml += '<p class="block-id"><span>' + data["name"][a] + '</span><span> prayed in <br /> ' + ParseAddressCityState(data["prayer"][a]["Address"]) + ', ' + ParseTime(data["prayer"][a]["TimeStamp"]) + '</span></p>\
+\
+\
+                                <p class="prayer-text"> ' + data["prayer"][a]["ChatMessage"] + '</p>\
+\
+                                <div class="dot-line"></div>\
+\
+                                <ul class="extras">\
+<li class="sharef"><img src="../images/facebook-btn.svg" alt="facebook social" /></li>\
+                                    <li class="sharet"><img src="../images/twitter-btn.svg" alt="twitter social" /></li>\
+                                    <li><img src="../images/repray-icon.svg" alt="Repray" /><span>' + data["repraycount"][a] + '</span></li>\
+                                    <li><img src="../images/hi-five-icon.svg" alt="Hi Five" /><span>' + data["highfivecount"][a] + '</span></li>\
+                                </ul>\
+\
+                                <div style="clear:both;"></div>\
+\
+                                <div class="all-likes" style="display:none;">\
+                                </div>\
+                                \
+                            </div><!-- end of other prayer block-->';
+            $(prayerhtml).insertAfter(".populate");
+        }
+        else if (data["prayer"][a]["TypeOfMsg"] == "universal") {
+            var prayerhtml = '<div class="prayer-block universal-id logoff-message block-4" id="' + data["prayer"][a]["Id"] + '">\
+                                <!-- universal block-->\
+\
+                                <a href="/Profile/Profile?profileid=' + data["prayer"][a]["UserId"] + '"><img class="display-pic" src="' + data["pictureurl"][a] + '" alt="display image" /></a>';
+            if (data["prayer"][a]["UserId"] == window.profileid)
+                prayerhtml += '<img class="delete-post" src="../images/cancel-icon-grey.svg" alt="edit post" />';
+            prayerhtml += '<p class="block-id"><span>LoGOFF</span><span> message: ' + ParseTime(data["prayer"][a]["TimeStamp"]) + '</span></p>\
+\
+                                <p class="prayer-text"> ' + data["prayer"][a]["ChatMessage"] + '</p>\
+\
+\
+                                <div style="clear:both;"></div>\
+\
+                            </div><!-- end of universal block-->';
+            $(prayerhtml).insertAfter(".populate");
+        }
+        else if (data["prayer"][a]["TypeOfMsg"] == "partner") {
+            var prayerhtml = '<div class="partner-block block-2';
+            if (data["prayer"][a]["UserId"] == window.profileid)
+                prayerhtml += " block-1";
+            prayerhtml += '" id="' + data["prayer"][a]["Id"] + '">\
+                                <!-- partner block-->\
+\
+                                <div class="delete-post-block">\
+                                    <div class="wrapper">\
+                                        <p>Are you sure want to delete this post?</p>\
+                                        <div>yes</div> <div>no</div>\
+                                    </div>\
+                                </div>\
+\
+                                <a href="/Profile/Profile?profileid=' + data["prayer"][a]["UserId"] + '"><img class="display-pic" src="' + data["pictureurl"][a] + '" alt="display image" /></a>';
+            if (data["prayer"][a]["UserId"] == window.profileid)
+                prayerhtml += '<img class="delete-post" src="../images/cancel-icon-grey.svg" alt="edit post" />';
+            prayerhtml += '<p class="block-id"><span>' + data["name"][a] + '</span><span> partnered in<br /> ' + ParseAddressCityState(data["prayer"][a]["Address"]) + ', ' + ParseTime(data["prayer"][a]["TimeStamp"]) + ' with:</span></p>\
+\
+                                <p class="partner-text"><span> ' + data["prayer"][a]["ChatMessage"] + '</span></p>\
+\
+                                <div class="dot-line"></div>\
+\
+                                <ul class="extras">\
+<li class="sharef"><img src="../images/facebook-btn.svg" alt="facebook social" /></li>\
+                                    <li class="sharet"><img src="../images/twitter-btn.svg" alt="twitter social" /></li>\
+                                    <li><img src="../images/repray-icon.svg" alt="Repray" /><span>' + data["repraycount"][a] + '</span></li>\
+                                    <li><img src="../images/hi-five-icon.svg" alt="Hi Five" /><span>' + data["highfivecount"][a] + '</span></li>\
+                                </ul>\
+\
+                                <div style="clear:both;"></div>\
+\
+                                <div class="all-likes" style="display:none;">\
+                                </div>\
+\
+                            </div><!-- end of partner block-->';
+            $(prayerhtml).insertAfter(".populate");
+        }
+    }
+
+    $(".sharef").on('click', sharefb);
+    $(".sharet").on('click', sharetwitter);
+    editblock();
+    $('img').error(function () {
+        $(this).attr('src', '../images/display-image.svg');
+    });
+}
+
+
+function sharefb(id)
+{/////customize the link based on id.
+    var id = $(this).parent().parent().attr("id");
+    window.mobilecheck = function () {
+        var check = false;
+        (function (a) { if (/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i.test(a) || /1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0, 4))) check = true })(navigator.userAgent || navigator.vendor || window.opera);
+        return check;
+    }
+    if (window.mobilecheck) {
+        //window.open("http://www.facebook.com/sharer.php?s=100&p[title]=" + window.facebookTitle + "&p[url]=http://welogoff.com/Home/Searchbar?id=" + id + "&p[summary]=" + window.facebookDescript);
+       // alert("https://www.facebook.com/dialog/share?app_id=536272789856437&display=popup&href=http://welogoff.com/Home/Searchbar?id=" + id);
+        window.open("https://www.facebook.com/dialog/share?app_id=536272789856437&display=popup&href=http://welogoff.com/Home/Searchbar?id=" + id + "&redirect_uri=http://logoffmovement.azurewebsites.net/", "LoGOFF", 'height=400,width=650');
+    
+    }
+    else {
+        FB.ui({
+            method: 'feed',
+            link: 'http://welogoff.com/Home/Searchbar?id=' + id,
+            redirect_uri: 'http://welogoff.com/',
+            description: window.facebookDescript,
+            name: window.facebookTitle,
+            caption: 'LoGOFF',
+        }, function (response) { });
+    }
+
+    //window.open("https://www.facebook.com/dialog/share?app_id=536272789856437&display=popup&href=http://welogoff.com/Home/Searchbar?id=" + id + "&redirect_uri=http://logoffmovement.azurewebsites.net/", "LoGOFF", 'height=400,width=650');
+}
+function sharetwitter() {/////customize the link based on id.
+    var text = $(this).parent().parent().attr("class");
+    if (text.indexOf("partner-block") > -1)
+    {
+        text = $(this).parent().parent().find(".partner-text").text();
+    }
+    else {
+        text = $(this).parent().parent().find(".prayer-text").text();
+    }
+    if (text.indexOf("#") > -1) {
+        text = text.split("#")[0] + "%23" + text.split("#")[1];
+    }
+    console.log(text.length);
+    if (text.length > 110)
+        text = text.substring(0, 110) + " welogoff.com";
+    else
+        text = text + " welogoff.com";
+    window.open("https://twitter.com/intent/tweet?text="+text+"&source=webclient","LoGOFF",'height=400,width=650');
+}
+function getPrayers() {
+    $.ajax({
+        type: "POST",
+        url: "/Home/getPrayer",
+        data: {},
+        contentType: "application/json; charset=utf-8",
+        success: function (data) {
+            renderprayers(data);
+            ///////////////////Facebookmeta()//////////////
+            $(".content").on('click', ".sharef img", function () {
+
+                var metaDescription = $("meta").last().prev();
+                var metaTitle = $("meta").last();
+
+                window.facebookTitle = $(this).parent().parent().parent().find(".block-id").text();
+                var text = $(this).parent().parent().attr("class");
+                if (text.indexOf("partner-block") > -1) {
+                    text = $(this).parent().parent().find(".partner-text").text();
+                }
+                else {
+                    text = $(this).parent().parent().find(".prayer-text").text();
+                }
+                window.facebookDescript = text;
+
+                metaTitle.attr("content", facebookTitle);
+                metaDescription.attr("content", facebookDescript);
+                console.log(facebookDescript);
+            });
+        },
+        error: function () {  console.log("getprayer"); },
+        traditional: true
+    });
+}
+////////////////////////////////////////////////////////////Partner/////////////////
+function formatAddress(address)
+{
+    var split = address.split(',');
+    return split[0] + "<br>" + split[1] +", " +split[2];
+}
+function formatAddress1(address) {
+    var split = address.split(',');
+    return split[1] + ", " + split[2];
+}
+function renderMapdata(data) {
+    var partnerhtml = '<div class="partner-block" id="' + data["Id"] + '">\
+                        <!--prayer block -->\
+                        <h1>'+ data["Name"] + '</h1>\
+                        <h2 onclick="return false;">' + formatAddress(data["Address"]) + '</h2>\
+                        <p>'+ data["ServiceDescriptionAdult"] + '</p>\
+                        <div class="extras-container">\
+                            <div class="mail">\
+                                <div>\
+                                    ';
+    if (data["Email"] != '' && data["Email"] != null && data["Email"].indexOf("@") != -1)
+        partnerhtml += '<a href="mailto:' + data["Email"] + '"><img src="../images/mail-icon.svg"></a>';
+    else
+        partnerhtml += '<img src="../images/mail-icon.svg" style="opacity: 0.0;">';
+    partnerhtml += '\
+                                </div>\
+                            </div>\
+                            <div class="phone">\
+                                <div>\
+                                    ';
+    if (data["PhoneNumber"] != '' && data["PhoneNumber"] != null)
+        partnerhtml += '<a href="tel:' + data["PhoneNumber"] + '"><img src="../images/phone-icon.svg"></a>';
+    else
+        partnerhtml += '<img src="../images/phone-icon.svg" style="opacity: 0.0;">';
+    partnerhtml += '\
+                                </div>\
+                            </div>\
+                            <div class="check-in">\
+                                <div>\
+                                    <img src="../images/check-in-icon.svg">\
+                                </div>\
+                            </div>\
+                            <div class="more-info">\
+                                <div>\
+                                    ';
+    if (data["Website"] != '' && data["Website"] != null) {
+        var website = data["Website"];
+        if (website.indexOf("http") == -1)
+            website = "http://" + website;
+        partnerhtml += '<a href="' + website + '" target="_blank"><img src="../images/more-info-icon.svg"></a>';
+    }
+    else
+        partnerhtml += '<img src="../images/more-info-icon.svg" style="opacity: 0.0;">';
+    partnerhtml += '\
+\
+                                </div>\
+                            </div>\
+                            <div style="clear:both;"></div>\
+                        </div>\
+\
+                    </div>';
+    return partnerhtml;
+}
+function GetMapData() {
+    $.ajax({
+        type: "POST",
+        url: "/Partner/GetMapData",
+        data: {},
+        contentType: "application/json; charset=utf-8",
+        success: function (data) {
+            for (a = 0; a < data.length; a++) {
+                var partnerhtml = renderMapdata(data[a]);
+                if(data[a]["subPartner"].indexOf("Food") > -1)
+                {
+                    $(".partner-cat-btn:contains('FOOD')").parent().find('.dotted-line').after(partnerhtml);
+                }
+                if (data[a]["subPartner"].indexOf("Housing") > -1) {
+                    $(".partner-cat-btn:contains('HOUSING')").parent().find('.dotted-line').after(partnerhtml);
+                }
+                if (data[a]["subPartner"].indexOf("Healthcare") > -1) {
+                    $(".partner-cat-btn:contains('HEALTHCARE')").parent().find('.dotted-line').after(partnerhtml);
+                }
+                if (data[a]["subPartner"].indexOf("Legal") > -1) {
+                    $(".partner-cat-btn:contains('LEGAL SERVICES')").parent().find('.dotted-line').after(partnerhtml);
+                }
+                if (data[a]["subPartner"].indexOf("Employment") > -1) {
+                    $(".partner-cat-btn:contains('EMPLOYMENT')").parent().find('.dotted-line').after(partnerhtml);
+                }
+                if (data[a]["subPartner"].indexOf("Clothing") > -1) {
+                    $(".partner-cat-btn:contains('CLOTHING')").parent().find('.dotted-line').after(partnerhtml);
+                }
+                if (data[a]["subPartner"].indexOf("Youth") > -1) {
+                    $(".partner-cat-btn:contains('YOUTH')").parent().find('.dotted-line').after(partnerhtml);
+                }
+            }
+            
+            $(".partner-cat-btn").on('click', partnerDropdown);
+            $(".new-partner-btn").on('click', newPartner);
+            $(".new-partner-block img").on('click', newPartnerOut);
+            $(".check-in").on('click', checkIn);
+        },
+        error: function () {  console.log("getmapdata"); },
+        traditional: true
+    });
+}
+
+function submitNewPartner(org, address, city, phone, website, email, food, housing, healthcare, legal, employment, clothing, youth, descriptionmessage, password) {
+    $.ajax({
+        type: "POST",
+        url: "/Partner/NewPartner",
+        data: {
+            password: password, food: food, housing: housing, healthcare: healthcare, legal: legal,
+            employment: employment, clothing: clothing, youth: youth, org: org, website: website, address: address,
+            city: city, phone: phone, descriptionmessage: descriptionmessage, email: email
+        },
+        success: function (data) {
+            $(".new-partner-block, .blocker").fadeOut(300);
+            document.getElementById("newpartnerform").reset();
+        },
+        error: function () {  console.log("submitnewpartner"); },
+        traditional: true
+    });
+}
+
+//////////////////////////////////Profile//////////////////////////////////
+function formatissues (data)
+{
+    var result = "";
+    if(data["cleanwater"] != 0)
+        result += "CLEAN WATER <br>"
+    if (data["criminal"] != 0)
+        result += "CRIMINAL JUSTICE <br>"
+    if (data["elderly"] != 0)
+        result += "ELDERLY/SICK AND SHUT IN <br>"
+    if (data["foodjustice"] != 0)
+        result += "FOOD JUSTICE/CREATION CARE <br>"
+    if (data["homelessness"] != 0)
+        result += "HOMELESSNESS <br>"
+    if (data["sextraffic"] != 0)
+        result += "SEX TRAFFICKING/LABOR SLAVERY <br>"
+    if (data["tutoring"] != 0)
+        result += "TUTORING/MENTORING <br>"
+    if (data["veterans"] != 0)
+        result += "VETERANS <br>"
+    return result;
+}
+function GetProfileData(profileid) {
+    $.ajax({
+        type: "POST",
+        url: "/Home/getUserName",
+        data: {profileid: profileid},
+        success: function (data) {
+            window.username = data;
+            $('.user').text(window.username);
+            $.ajax({
+                type: "POST",
+                url: "/Profile/GetProfileData",
+                data: {},
+                contentType: "application/json; charset=utf-8",
+                success: function (data1) {
+                    if (data1["isindividual"] == "true")
+                        $('.content').find('.type').text("NEIGHBOR");
+                    else if (data1["isindividual"] == "false")
+                        $('.content').find('.type').text("ORGANIZATION");
+                    else
+                        $('.content').find('.type').text(data1["isindividual"]);
+
+                    $('.content').find('.bio-block p:nth-child(2)').text(data1["affiliateorg"]);
+                    $('.content').find('.bio-block p:nth-child(4)').text(data1["zipcode"]);
+                    $('.content').find('.bio-block p:nth-child(6)').html(formatissues(data1));
+                    $('.content').find('.bio-block p:nth-child(8)').text(data1["loveyourneighbor"]);
+
+                    if (data1["volunteerhours"] == "true")
+                        $('.content').find('.bio-block p:nth-child(10)').text("YES");
+                    else if (data1["volunteerhours"] == "false")
+                        $('.content').find('.bio-block p:nth-child(10)').text("NO");
+                    else
+                        $('.content').find('.bio-block p:nth-child(10)').text(data1["volunteerhours"]);
+
+                    $('.content').find('.bio-block p:nth-child(12)').text(data1["talents"]);
+
+                    if (data1["isdonate"] == "true")
+                        $('.content').find('.bio-block p:nth-child(14)').text("YES");
+                    else if (data1["isdonate"] == "false")
+                        $('.content').find('.bio-block p:nth-child(14)').text("NO");
+                    else
+                        $('.content').find('.bio-block p:nth-child(14)').text(data1["isdonate"]);
+                    //$(".partner-cat-btn:contains('FOOD')").parent().find('.dotted-line').after(profilehtml);               
+
+                },
+
+                error: function (data) {  console.log("getprofiledata"); console.log(data); },
+                traditional: true
+            });
+        },
+
+        error: function (data) {  console.log("getusername"); console.log(data); },
+        traditional: true
+    });   
+}
+function profileFollow() {
+    var follower = $(this).find("span").text();
+
+    if (follower == "UNFOLLOW") {
+        $(this).find("img").attr('src', '../images/add-follower.svg');
+        $(this).find("span").text("FOLLOW").css("color", "#bbbdc0");
+        unfollow();
+    } else {
+        $(this).find("img").attr('src', '../images/unfollow.svg');
+        $(this).find("span").text("UNFOLLOW").css("color", "#6f9492");
+        follow();
+    }
+
+
+}
+//////FOR CHAT///////////
+function initiatechat()
+{
+    //////chat
+    $.ajax({
+        type: "POST",
+        url: "/Home/getProfileId",
+        data: {},
+        success: function (data) {
+            window.profileid = data;
+            $.ajax({
+                type: "POST",
+                url: "/Home/getUserName",
+                data: { profileid: -1 },
+                success: function (data1) {
+                    window.username = data1;
+                    chatinit(data, window.username);
+
+                },
+                error: function () {  console.log("chatinit"); },
+                traditional: true
+            });
+        },
+        traditional: true
+    });
+    
+    /////////////////chat
+    $(".chat-window .names li").on('click', function () {
+        var chatuser = $(this).find("h2").text();
+
+        $(".chat-type").find("span").text(chatuser);
+
+        $(".chat-window").transition({ left: '-100%' }, 400);
+    });
+}
+function checkunreadmsgfeed(sender) {
+    $.ajax({
+        url: "/api/API/CheckUnsendMSG",
+        contentType: "application/json; charset=utf-8",
+        data: {
+            user: sender
+        },
+        success: function (data) {
+            if (data.length == 0) {
+                $(".profile-btn span").text("");
+            }
+            else {
+                for (var b = 0; b < window.myfollowing["followinglist"].length; b++) {
+                    if (window.myfollowing["followinglist"][b][1] == data[a]) {
+                        $(".profile-btn span").text(".");
+                    }
+                }
+                
+            }
+        },
+        error: function () {
+            console.log("failed");
+        }
+    });
+}
+function checkunreadmsg(sender) {
+    $.ajax({
+        url: "/api/API/CheckUnsendMSG",
+        contentType: "application/json; charset=utf-8",
+        data: {
+            user: sender
+        },
+        success: function (data) {
+            if (data.length == 0) {
+                $(".chatrecipt span").text("");
+                $(".profile-btn span").text("");
+                $(".new-message").text("");
+            }
+            else {
+                for (var a = 0; a < data.length; a++) {
+                    for (var b = 0; b < window.myfollowing["followinglist"].length; b++) {
+                        if (window.myfollowing["followinglist"][b][1] == data[a]) {
+                            $("#" + data[a]).find("span").text(".");
+                            $(".profile-btn span").text(".");
+                            $(".new-message").text(".");
+                        }
+                    }
+                }
+            }
+        },
+        error: function () {
+            console.log("failed");
+        }
+    });
+}
+function renderfollowingChat(data, picurl)
+{
+    var chathtml = '<li class="chatrecipt" id="'+data[1]+'">\
+                            <img src="'+picurl+'">\
+                            <h2>'+data[0]+'</h2>\
+                            <span></span>\
+                            <div style="clear:both;"></div>\
+                        </li>';
+    $('.names ul').append(chathtml);
+    $('img').error(function () {
+        $(this).attr('src', '../images/display-image.svg');
+    });
+}
+function renderfollowList(data, classname, picurl)
+{
+    //<img class="follower" src="../images/unfollow.svg" alt="display image">\
+    var friendhtml = '<div class="user-follow" id="' + data[1] + '">\
+                        <img class="display-img" src="'+picurl+'" alt="display image">\
+                        <p>'+ data[0] + '</p>\
+                        <div style="clear:both;"></div>\
+                    </div>';
+    $(classname).prepend(friendhtml);
+    $('img').error(function () {
+        $(this).attr('src', '../images/display-image.svg');
+    });
+}
+function getmyFollowingList() {
+    $.ajax({
+        type: "POST",
+        url: "/Profile/GetMyFollowingList",
+        data: {},
+        success: function (data) {
+
+            window.myfollowing = data;
+            for (a = 0; a < data["followinglist"].length; a++) {
+                renderfollowingChat(data["followinglist"][a], data["picurl"][a]);
+            }
+            initiatechat();
+            ////////for profile to go to other profile
+            $(".user-follow").on("click", function () {
+                var pid = $(this).attr('id');
+                window.location.href = "/Profile/Profile?profileid=" + pid;
+            });
+
+        },
+        error: function (data) {  console.log("getfollowinglist"); console.log(data); },
+        traditional: true
+    });
+}
+function getFollowingList() {
+    $.ajax({
+        type: "POST",
+        url: "/Profile/GetFollowingList",
+        data: {},
+        success: function (data) {
+            var length = data["followinglist"].length;
+            $('.following-btn span:first-child').text(length.toString());
+            for (a = 0; a < data["followinglist"].length; a++)
+            {
+                renderfollowList(data["followinglist"][a], '.all-following', data["picurl"][a]);
+            }
+           
+            ////////for profile to go to other profile
+            $(".user-follow").on("click", function () {
+                var pid = $(this).attr('id');
+                window.location.href = "/Profile/Profile?profileid=" + pid;
+            });
+            
+        },
+        error: function (data) {  console.log("getfollowinglist"); console.log(data); },
+        traditional: true
+    });
+}
+
+function getFollowerList() {
+    $.ajax({
+        type: "POST",
+        url: "/Profile/GetFollowerList",
+        data: {},
+        success: function (data) {
+            
+            var length = data["followerlist"].length;
+            $('.followers-btn span:first-child').text(length.toString());
+            for (a = 0; a < data["followerlist"].length; a++) {
+                renderfollowList(data["followerlist"][a], '.all-followers', data["picurl"][a]);
+            }
+            $(".user-follow").on("click", function () {
+                var pid = $(this).attr('id');
+                window.location.href = "/Profile/Profile?profileid=" + pid;
+            });
+            followYesNo(data);
+        },
+        error: function (data) {  console.log("getfollowerlist"); console.log(data); },
+        traditional: true
+    });
+}
+
+function GetMyPosts(profileid) {
+    $.ajax({
+        type: "POST",
+        url: "/Profile/GetMyPosts",
+        data: { profileid: profileid },
+        success: function (data) {
+            console.log(data);
+            var length = data.length;
+            $('.posts-btn span:first-child').text(length.toString());
+        },
+        error: function () {  console.log("getmyposts"); },
+        traditional: true
+    });
+}
+function getprofileidurl()
+{
+    if (window.location.href.indexOf("?profileid=") == -1) {
+        return -1;
+    }
+    else {
+        var temp = window.location.href.split("?profileid=")[1];
+        return temp;
+    }
+}
+function getthisProfileid()
+{
+    if (window.location.href.indexOf("?profileid=") == -1) {
+        $.ajax({
+            type: "POST",
+            url: "/Home/getProfileId",
+            data: {},
+            success: function (data) {
+                window.thisprofileid = data;
+                window.myprofileid = data;
+                $.ajax({
+                    type: "POST",
+                    url: "/Profile/GetMyPosts",
+                    data: { profileid: data },
+                    success: function (data1) {
+                        var length = data1["name"].length;
+                        $('.posts-btn span:first-child').text(length.toString());
+                        for (a = 0; a < data1["prayer"].length; a++) {
+                            if (data1["prayer"][a]["TypeOfMsg"] == "prayerrequestresponse" || data1["prayer"][a]["TypeOfMsg"] == "prayerrequest") {
+                                var prayerhtml = '<div class="prayer-block block-3';
+                                if (data1["prayer"][a]["UserId"] == window.profileid)
+                                    prayerhtml += " block-1";
+                                prayerhtml += '" id="' + data1["prayer"][a]["Id"] + '">\
+                                <!-- re prayer block-->\
+\
+                                <div class="delete-post-block">\
+                                    <!-- other prayer block-->\
+                                    <div class="wrapper">\
+                                        <p>Are you sure want to delete this post?</p>\
+                                        <div>yes</div> <div>no</div>\
+                                    </div>\
+                                </div>\
+\
+                                <img class="display-pic" src="../images/display-image.svg" alt="display image" />\
+                                <img class="uni" src="/images/repray2-icon.svg" alt="universal icon" style="display: block;">';
+                                prayerhtml += '<p class="block-id"><span>' + data1["name"][a] + '</span><span> prayed in <br /> ' + ParseAddressCityState(data1["prayer"][a]["Address"]) + ', ' + ParseTime(data1["prayer"][a]["TimeStamp"]) + '</span></p>\
+                                <div class="repray-fill">' + data1["prayer"][a]["RePrayerMsg"] + '</div>\
+\
+                                <p class="prayer-text"> ' + data1["prayer"][a]["ChatMessage"] + '</p>\
+\
+                                <div class="dot-line"></div>\
+\
+                                <ul class="extras">\
+                                   \
+                                </ul>\
+\
+                                <div style="clear:both;"></div>\
+\
+                                <div class="all-likes" style="display:none;">\
+                                </div>\
+                                \
+                            </div><!-- end of other prayer block-->';
+                                $(".allposts-block").prepend(prayerhtml);
+                            }
+                            else if (data1["prayer"][a]["TypeOfMsg"] == "prayer") {
+                                var prayerhtml = '<div class="prayer-block block-3';
+                                if (data1["prayer"][a]["UserId"] == window.profileid)
+                                    prayerhtml += " block-1";
+                                prayerhtml += '" id="' + data1["prayer"][a]["Id"] + '">\
+                                <!-- re prayer block-->\
+\
+                                <div class="delete-post-block">\
+                                    <!-- other prayer block-->\
+                                    <div class="wrapper">\
+                                        <p>Are you sure want to delete this post?</p>\
+                                        <div>yes</div> <div>no</div>\
+                                    </div>\
+                                </div>\
+\
+                                <img class="display-pic" src="../images/display-image.svg" alt="display image" />';
+                                prayerhtml += '<p class="block-id"><span>' + data1["name"][a] + '</span><span> prayed in <br /> ' + ParseAddressCityState(data1["prayer"][a]["Address"]) + ', ' + ParseTime(data1["prayer"][a]["TimeStamp"]) + '</span></p>\
+\
+\
+                                <p class="prayer-text"> ' + data1["prayer"][a]["ChatMessage"] + '</p>\
+\
+                                <div class="dot-line"></div>\
+\
+                                <ul class="extras">\
+                                    \
+                                </ul>\
+\
+                                <div style="clear:both;"></div>\
+\
+                                <div class="all-likes" style="display:none;">\
+                                </div>\
+                                \
+                            </div><!-- end of other prayer block-->';
+                                $(".allposts-block").prepend(prayerhtml);
+                            }
+                            else if (data1["prayer"][a]["TypeOfMsg"] == "universal") {
+                                var prayerhtml = '<div class="prayer-block universal-id logoff-message block-4" id="' + data1["prayer"][a]["Id"] + '">\
+                                <!-- universal block-->\
+\
+                                <img class="display-pic" src="../images/logoff-profile.svg" alt="display image" />';
+                                prayerhtml += '<p class="block-id"><span>LoGOFF</span><span> message: ' + ParseTime(data1["prayer"][a]["TimeStamp"]) + '</span></p>\
+\
+                                <p class="prayer-text"> ' + data1["prayer"][a]["ChatMessage"] + '</p>\
+\
+\
+                                <div style="clear:both;"></div>\
+\
+                            </div><!-- end of universal block-->';
+                                $(".allposts-block").prepend(prayerhtml);
+                            }
+                            else if (data1["prayer"][a]["TypeOfMsg"] == "partner") {
+                                var prayerhtml = '<div class="partner-block block-2';
+                                if (data1["prayer"][a]["UserId"] == window.profileid)
+                                    prayerhtml += " block-1";
+                                prayerhtml += '" id="' + data1["prayer"][a]["Id"] + '">\
+                                <!-- partner block-->\
+\
+                                <div class="delete-post-block">\
+                                    <div class="wrapper">\
+                                        <p>Are you sure want to delete this post?</p>\
+                                        <div>yes</div> <div>no</div>\
+                                    </div>\
+                                </div>\
+\
+                                <img class="display-pic" src="../images/display-image.svg" alt="display image" />';
+                                prayerhtml += '<p class="block-id"><span>' + data1["name"][a] + '</span><span> partnered in<br /> ' + ParseAddressCityState(data1["prayer"][a]["Address"]) + ', ' + ParseTime(data1["prayer"][a]["TimeStamp"]) + ' with:</span></p>\
+\
+                                <p class="partner-text"><span> ' + data1["prayer"][a]["ChatMessage"] + '</span></p>\
+\
+                                <div class="dot-line"></div>\
+\
+                                <ul class="extras">\
+                                   \
+                                </ul>\
+\
+                                <div style="clear:both;"></div>\
+\
+                                <div class="all-likes" style="display:none;">\
+                                </div>\
+\
+                            </div><!-- end of partner block-->';
+                                $(".allposts-block").prepend(prayerhtml);
+                                
+                            }
+                        }
+                        var profileid = getprofileidurl();
+                        $.ajax({
+                            type: "POST",
+                            url: "/Home/getPictureURL",
+                            data: { profileid: window.thisprofileid },
+                            success: function (data) {
+                                $(".display-pic").attr("src", data.split(",")[0]);
+                                $(".display-pic").wrap('<a href="/Profile/Profile?profileid=' + data.split(",@")[1] + '"></a>');
+                                $(".display-block img:first").attr("src", data.split(",")[0]);
+                                $(".display-block img:first").wrap('<a href="/Profile/Profile?profileid=' + data.split(",@")[1] + '"></a>');
+
+                            },
+                            error: function () { console.log("getPictureURL"); },
+                            traditional: true
+                        });
+                        $('img').error(function () {
+                            $(this).attr('src', '../images/display-image.svg');
+                        });
+                    },
+                    error: function () {  console.log("getthisprofileid"); },
+                    traditional: true
+                });  
+
+            },
+            traditional: true
+        });
+    }
+    else {
+        var temp = window.location.href.split("?profileid=")[1];
+        
+        window.thisprofileid = temp;
+        $.ajax({
+            type: "POST",
+            url: "/Profile/GetMyPosts",
+            data: { profileid: temp },
+            success: function (data) {
+                var length = data["name"].length;
+                $('.posts-btn span:first-child').text(length.toString());
+                for (a = 0; a < data["prayer"].length; a++) {
+                    if (data["prayer"][a]["TypeOfMsg"] == "prayerrequestresponse" || data["prayer"][a]["TypeOfMsg"] == "prayerrequest") {
+                        var prayerhtml = '<div class="prayer-block block-3';
+                        if (data["prayer"][a]["UserId"] == window.profileid)
+                            prayerhtml += " block-1";
+                        prayerhtml += '" id="' + data["prayer"][a]["Id"] + '">\
+                                <!-- re prayer block-->\
+\
+                                <div class="delete-post-block">\
+                                    <!-- other prayer block-->\
+                                    <div class="wrapper">\
+                                        <p>Are you sure want to delete this post?</p>\
+                                        <div>yes</div> <div>no</div>\
+                                    </div>\
+                                </div>\
+\
+                                <img class="display-pic" src="../images/display-image.svg" alt="display image" />\
+                                <img class="uni" src="/images/repray2-icon.svg" alt="universal icon" style="display: block;">';
+                        prayerhtml += '<p class="block-id"><span>' + data["name"][a] + '</span><span> prayed in <br /> ' + ParseAddressCityState(data["prayer"][a]["Address"]) + ', ' + ParseTime(data["prayer"][a]["TimeStamp"]) + '</span></p>\
+                                <div class="repray-fill">' + data["prayer"][a]["RePrayerMsg"] + '</div>\
+\
+                                <p class="prayer-text"> ' + data["prayer"][a]["ChatMessage"] + '</p>\
+\
+                                <div class="dot-line"></div>\
+\
+                                <ul class="extras">\
+                                </ul>\
+\
+                                <div style="clear:both;"></div>\
+\
+                                <div class="all-likes" style="display:none;">\
+                                </div>\
+                                \
+                            </div><!-- end of other prayer block-->';
+                        $(".allposts-block").prepend(prayerhtml);
+                    }
+                    else if (data["prayer"][a]["TypeOfMsg"] == "prayer") {
+                        var prayerhtml = '<div class="prayer-block block-3';
+                        if (data["prayer"][a]["UserId"] == window.profileid)
+                            prayerhtml += " block-1";
+                        prayerhtml += '" id="' + data["prayer"][a]["Id"] + '">\
+                                <!-- re prayer block-->\
+\
+                                <div class="delete-post-block">\
+                                    <!-- other prayer block-->\
+                                    <div class="wrapper">\
+                                        <p>Are you sure want to delete this post?</p>\
+                                        <div>yes</div> <div>no</div>\
+                                    </div>\
+                                </div>\
+\
+                                <img class="display-pic" src="../images/display-image.svg" alt="display image" />';
+                        prayerhtml += '<p class="block-id"><span>' + data["name"][a] + '</span><span> prayed in <br /> ' + ParseAddressCityState(data["prayer"][a]["Address"]) + ', ' + ParseTime(data["prayer"][a]["TimeStamp"]) + '</span></p>\
+\
+\
+                                <p class="prayer-text"> ' + data["prayer"][a]["ChatMessage"] + '</p>\
+\
+                                <div class="dot-line"></div>\
+\
+                                <ul class="extras">\
+                                </ul>\
+\
+                                <div style="clear:both;"></div>\
+\
+                                <div class="all-likes" style="display:none;">\
+                                </div>\
+                                \
+                            </div><!-- end of other prayer block-->';
+                        $(".allposts-block").prepend(prayerhtml);
+                    }
+                    else if (data["prayer"][a]["TypeOfMsg"] == "universal") {
+                        var prayerhtml = '<div class="prayer-block universal-id logoff-message block-4" id="' + data["prayer"][a]["Id"] + '">\
+                                <!-- universal block-->\
+\
+                                <img class="display-pic" src="../images/logoff-profile.svg" alt="display image" />';
+                        prayerhtml += '<p class="block-id"><span>LoGOFF</span><span> message: ' + ParseTime(data["prayer"][a]["TimeStamp"]) + '</span></p>\
+\
+                                <p class="prayer-text"> ' + data["prayer"][a]["ChatMessage"] + '</p>\
+\
+\
+                                <div style="clear:both;"></div>\
+\
+                            </div><!-- end of universal block-->';
+                        $(".allposts-block").prepend(prayerhtml);
+                    }
+                    else if (data["prayer"][a]["TypeOfMsg"] == "partner") {
+                        var prayerhtml = '<div class="partner-block block-2';
+                        if (data["prayer"][a]["UserId"] == window.profileid)
+                            prayerhtml += " block-1";
+                        prayerhtml += '" id="' + data["prayer"][a]["Id"] + '">\
+                                <!-- partner block-->\
+\
+                                <div class="delete-post-block">\
+                                    <div class="wrapper">\
+                                        <p>Are you sure want to delete this post?</p>\
+                                        <div>yes</div> <div>no</div>\
+                                    </div>\
+                                </div>\
+\
+                                <img class="display-pic" src="../images/display-image.svg" alt="display image" />';
+                        prayerhtml += '<p class="block-id"><span>' + data["name"][a] + '</span><span> partnered in<br /> ' + ParseAddressCityState(data["prayer"][a]["Address"]) + ', ' + ParseTime(data["prayer"][a]["TimeStamp"]) + ' with:</span></p>\
+\
+                                <p class="partner-text"><span> ' + data["prayer"][a]["ChatMessage"] + '</span></p>\
+\
+                                <div class="dot-line"></div>\
+\
+                                <ul class="extras">\
+                                </ul>\
+\
+                                <div style="clear:both;"></div>\
+\
+                                <div class="all-likes" style="display:none;">\
+                                </div>\
+\
+                            </div><!-- end of partner block-->';
+                        $(".allposts-block").prepend(prayerhtml);             
+                    }
+                }
+                $.ajax({
+                    type: "POST",
+                    url: "/Home/getPictureURL",
+                    data: { profileid: temp },
+                    success: function (data) {
+                        $(".display-pic").attr("src", data.split(",")[0]);
+                        $(".display-pic").wrap('<a href="/Profile/Profile?profileid=' + data.split(",@")[1] + '"></a>');
+                        $(".display-block img:first").attr("src", data.split(",")[0]);
+                        $(".display-block img:first").wrap('<a href="/Profile/Profile?profileid=' + data.split(",@")[1] + '"></a>');
+
+                    },
+                    error: function () { console.log("getPictureURL"); },
+                    traditional: true
+                });
+                $('img').error(function () {
+                    $(this).attr('src', '../images/display-image.svg');
+                });
+            },
+            error: function () {  console.log("getthisprofileid"); },
+            traditional: true
+        });
+    }
+}
+
+function followYesNo(data)
+{
+    var unfollowhtml = '<div class="follow">\
+                    <img src="../images/unfollow.svg" />\
+                    <span>UNFOLLOW</span>\
+                </div>';
+    var followhtml = '<div class="follow">\
+                    <img src="../images/add-follower.svg">\
+                    <span>FOLLOW</span>\
+                </div>';
+    var profileid = getprofileidurl();
+    if (profileid == -1) {
+
+    }
+    else {
+        $.ajax({
+            type: "POST",
+            url: "/Home/getProfileId",
+            data: {},
+            success: function (data1) {
+                profileid = data1;
+                var isfollow = false;
+                for (var a = 0; a < data["followerlist"].length; a++) {
+                    if (profileid == data["followerlist"][a][1]) {
+                        $('.display-block').append(unfollowhtml);
+                        $(".display-block .follow").on('click', profileFollow);
+                        isfollow = true;
+                        break;
+                    }
+                }
+                if (!isfollow) {
+                    if(profileid != getprofileidurl())
+                    {
+                        $('.display-block').append(followhtml);
+                        $(".display-block .follow").on('click', profileFollow);
+                    }
+                        
+                }
+            },
+            traditional: true
+        });
+    }  
+}
+function follow()
+{
+    $.ajax({
+        type: "POST",
+        url: "/Profile/Follow",
+        data: { friendusername: getprofileidurl() },
+        success: function (data) {
+            location.reload();
+        },
+        error: function () {  console.log("follow"); },
+        traditional: true
+    });
+}
+function unfollow()
+{
+    $.ajax({
+        type: "POST",
+        url: "/Profile/UnFollow",
+        data: { friendusername: getprofileidurl() },
+        success: function (data) {
+            location.reload();
+        },
+        error: function () {  console.log("unfollow"); },
+        traditional: true
+    });
+}
+/////////////////////////Social//////////////////////////
+function linkfb()
+{
+    $(".facebook").on("click", function () {
+        FB.login(function (response) {
+            if (response.authResponse) {
+                var string = response.authResponse.accessToken;
+                $.ajax({
+                    type: "POST",
+                    url: "/Account/ExternalLogin",
+                    data: { Provider: "facebook", shorttermaccesstoken: string },
+                    success: function (data) {
+                        location.reload();
+                    },
+                    error: function () {  console.log("link facebook"); },
+                    traditional: true
+                });
+            }
+            else {
+                console.log('User cancelled login or did not fully authorize.');
+            }
+        }, {
+            scope: 'email,publish_actions'
+        });
+    });
+}
+function linktwitter()
+{
+    var url = (window.location != window.parent.location) ? document.referrer : document.location;
+    $(".twitter").on("click", function () {
+        $.ajax({
+            type: "POST",
+            url: "/Account/ExternalLogin",
+            data: { Provider: "twitter", url: url },
+            success: function (data) {
+                location.reload();
+            },
+            error: function () {  console.log("link twitter"); },
+            traditional: true
+        });
+    });
+    
+}
+function isfacebooklinked()
+{
+    $.ajax({
+        type: "POST",
+        url: "/Profile/isFacebookLinked",
+        data: { },
+        success: function (data) {
+            if(!data)
+            {
+                $('#fb-root').after('<h2 class="facebook">CONNECT WITH FACEBOOK</h2><p>Connecting with Facebook will allow you to share you activity on Facebook. </p>');
+            }
+        },
+        error: function () {  console.log("isfacebooklinked"); },
+        traditional: true
+    });
+}
+function istwitterlinked() {
+    $.ajax({
+        type: "POST",
+        url: "/Profile/isTwitterLinked",
+        data: { },
+        success: function (data) {
+            if (!data) {
+                $('#fb-root').after('<h2 class="twitter">CONNECT WITH TWITTER<p>Connecting with Twitter will allow you to share you activity on Twitter. </p></h2>');
+            }
+        },
+        error: function () {  console.log("istwitterlinked"); },
+        traditional: true
+    });
+}
+///////////////Search bar//////////////////////////
+function searchbarenter() {
+    $('#friendlistbox').keyup(function (e) {
+        if (e.keyCode == 13) {
+            enterKeybar();
+        }
+    });
+}
+///change this to searchenteredbar
+function enterKey() {
+    var query = $('#friendlistbox').val();
+    if (query == "SEARCH")
+        query = window.location.href.split("=")[1];
+    $.ajax({
+        type: "POST",
+        url: "/Home/SearchEntered",
+        data: { query: query },
+        success: function (data) {
+            console.log(data);
+            $(".prayer-block").remove();
+            $(".partner-block").remove();
+            renderprayers(data["prayer"]);
+            renderfriendnames(data["users"]);
+            //renderprayers(data);
+            $('img').error(function () {
+                $(this).attr('src', '../images/display-image.svg');
+            });
+            $(".follow-block").on("click", function () {
+                window.location.href = $(this).find('a').attr("href");
+            });
+        },
+        error: function () {  console.log("searchbarenter"); },
+        traditional: true
+    });
+}
+function enterKeybar() {
+    var query = $('#friendlistbox').val();
+    if(location.href.indexOf("SearchEnteredBar") == -1)
+        location.href = "/Home/SearchEnteredBar?query=" + query;
+    else
+        location.href = "/Home/SearchEnteredBar?query=" + query;
+}
+function renderfriendnames(data)
+{
+    console.log(data);
+    for(var a=0; a < data.length; a++)
+    {
+        var userid = data[a].split("***, @");
+        var name;
+        var status;
+        if (userid[0].indexOf("following") > -1) {
+            name = userid[0].split(" (")[0];
+            status = "Following";
+        }
+        else if (userid[0].indexOf("mutual") > -1) {
+            name = userid[0].split(" (")[0];
+            status = "Mutual Follower";
+        }
+        else
+        {
+            name = userid[0];
+            status = "No Relation";
+        }
+        
+        var friendhtml = '<div class="follow-block">\
+                <a href="/Profile/Profile?profileid=' + userid[1] + '"><img src="' + userid[2] + '" alt="display image"></a>\
+                <p>\
+                    <span>'+name+'</span><br>\
+                    <span></span><span>'+status+'</span>\
+                </p>\
+                <div style="clear:both;"></div>\
+            </div>';
+        $(friendhtml).insertAfter(".populate");
+    }
+}
+function getPictureURLFeed() {
+    var profileid = getprofileidurl();
+    $.ajax({
+        type: "POST",
+        url: "/Home/getPictureURL",
+        data: { profileid: profileid },
+        success: function (data) {
+            $(".new-post img:first").attr("src", data.split(",")[0]);
+            $(".new-post img:first").wrap('<a href="/Profile/Profile?profileid=' + data.split(",@")[1] + '"></a>');
+            $('img').error(function () {
+                $(this).attr('src', '../images/display-image.svg');
+            });
+
+            console.log("getPictureURLFeed");
+        },
+        error: function () {  console.log("getPictureURL"); },
+        traditional: true
+    });
+}
+function getPictureURLProfile() {
+    var profileid = getprofileidurl();
+    $.ajax({
+        type: "POST",
+        url: "/Home/getPictureURL",
+        data: {profileid: profileid},
+        success: function (data) {
+            $(".display-pic").attr("src", data.split(",")[0]);
+            $(".display-pic").wrap('<a href="/Profile/Profile?profileid=' + data.split(",@")[1] + '"></a>');
+            $(".display-block img:first").attr("src", data.split(",")[0]);
+            $(".display-block img:first").wrap('<a href="/Profile/Profile?profileid=' + data.split(",@")[1] + '"></a>');
+            $('img').error(function () {
+                $(this).attr('src', '../images/display-image.svg');
+            });
+            console.log("getPictureURLProfile");
+        },
+        error: function () {  console.log("getPictureURL"); },
+        traditional: true
+    });
+}
+///////////////////////////////////Frontend Post Prayer
+function postprayer(text) {
+    document.getElementById("submitprayer").disabled = true;
+    if (text != "Write New Prayer...") {
+        $.ajax({
+            type: "POST",
+            url: "/Pray/Submit",
+            data: { txtmessage: text },
+            success: function (data) {
+                $(".populate").find(".prayer-block").attr("id", data);
+            },
+            error: function () {
+                console.log("postprayer");
+            },
+            dataType: "text"
+        });
+    }
+}
+function postprayerreq(text, requestmsg, postid) {
+    document.getElementById("submitreprayer").disabled = true;
+    if (text != "Write New Prayer...") {
+        $.ajax({
+            type: "POST",
+            url: "/Pray/PrayerRequest",
+            data: {
+                txtmessagee: text,
+                requestmsg: requestmsg,
+                postid: postid
+            },
+            success: function (data) {
+                $(".populate").find(".prayer-block").attr("id", data);
+            },
+            error: function () {
+                console.log("postprayerreq");
+            },
+            dataType: "text"
+        });
+    }
+}
