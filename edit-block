@@ -1,0 +1,560 @@
+function editblock() {
+
+    var $content = $(".content");
+    var $prayerTemplate = $(".template-prayer").html();
+    var $likeTemplate = $(".template-like").html();
+    var $reprayTemplate = $(".template-repray").html();
+    var $CurrentLikes
+    var $CurrentRepray
+    var $block;
+    //THis is all my functions
+
+
+    $("button").on('click', createPost);
+    $(".repray-post .cancel-post").on('click', reprayoff);
+
+
+    //$(".whosfollowing .cancel-following").on('click', whosFollowingOff);
+
+
+    $content.find(".extras li:nth-child(4) img").on('click', hiFive);
+    // $content.find(".extras li:nth-child(1) img").on('click', unfollow);
+    $content.find(".delete-post, .delete-post-block .wrapper div:nth-child(3)").on('click', deletePostBlock);
+    $content.find(".delete-post-block .wrapper div:nth-child(2)").on('click', removePost);
+    //$content.find(" .extras li span").on('click', whosFollowing);
+    $content.find(".extras li:nth-child(3) img").on('click', reprayon);
+
+    $(".back-to-top").on("click", function () {
+        $(".content").animate({ scrollTop: 0 });
+    });
+
+    var observe2;
+
+
+
+    if (window.attachEvent) {
+        observe2 = function (element, event, handler) {
+            element.attachEvent('on' + event, handler);
+        };
+    }
+    else {
+        observe2 = function (element, event, handler) {
+            element.addEventListener(event, handler, false);
+        };
+    }
+
+    var $newPostContainer = $(".new-post");
+    var $newPostBtn = $(".new-post .new-post-btn");
+    var $uniBtn = $(".new-post form img");
+    var $uniInput = $(".new-post form input[type=password]")
+    var $cancelPost = $(".new-post .cancel-post");
+
+
+
+    $newPostBtn.stop(true, true).on('click', newPostContainerAni);
+    $uniBtn.stop(true, true).on('click', universalPost);
+    $cancelPost.stop(true, true).on('click', cancelPost);
+
+
+
+
+    $('.prayer-message-box').keyup(function () {
+        var length = $(this).val().length;
+
+        $('.character-counter span').text(length);
+    });
+
+    $('.prayer-message-box').keypress(function (event) {
+
+        if (event.keyCode == 13) {
+            event.preventDefault();
+        }
+    });
+    ///////////////////////Keyboard bugs!!!!!!!!!!!!//////////////
+    $('.prayer-message-box').focus(function () {
+      //  init();
+    });
+    ////////////////////////////auto resize///////////////////////////////
+
+
+    var observe;
+
+
+
+    if (window.attachEvent) {
+        observe = function (element, event, handler) {
+            element.attachEvent('on' + event, handler);
+        };
+    }
+    else {
+        observe = function (element, event, handler) {
+            element.addEventListener(event, handler, false);
+        };
+    }
+
+    function hiFive() {/////////////////////////////////////////
+
+        var hifives = Math.floor($(this).parent().find("span").text());
+        var $thispost = $(this).parent().parent().parent().find(".all-likes");
+        $.ajax({
+            type: "POST",
+            url: "/Home/PrayerHiFive",
+            data: {
+                statusid: $(this).parent().parent().parent().attr('id'),
+                add: "true"
+            },
+            context: this,
+            success: function (data) {
+                if (data == "true") {
+                    hifives++;
+                    $(this).parent().find("span").text(hifives);
+                    $(this).attr('src', "/images/hi-five-icon-active.svg");
+
+                    $thispost.prepend($likeTemplate);
+                    //$thispost.html($likeTemplate);
+                }
+                else if (data == "false") {
+                    hifives--;
+                    $(this).parent().find("span").text(hifives);
+                    $(this).attr('src', "/images/hi-five-icon.svg");
+                    $thispost.html("");
+                }
+
+            },
+            traditional: true
+        });
+
+    }////////////////////
+
+    function facebookMeta() {
+
+        $(".content").on('click', ".sharef img", function () {
+
+            var metaDescription = $("meta").last().prev();
+            var metaTitle = $("meta").last();
+
+            var facebookTitle = $(this).parent().parent().find(".block-id").text();
+            var facebookDescript = $(this).parent().parent().find(".block-id").next().text();
+
+            metaTitle.attr("content", facebookTitle);
+            metaDescription.attr("content", facebookDescript);
+
+        });
+
+    }
+    function createPost() {////////////////////////
+        var picurl = $(".new-post").find(".display-pic").attr("src");
+        $(".template-prayer").find(".display-pic").attr("src", picurl);
+        var $newText = $(this).parent().find("textarea").val();
+        var postType = $(this).parent().parent().parent().attr('class');
+        var postType2 = $(this).parent().parent().parent().parent().parent().attr('class');
+        var $password = $(".new-post input[type=password]").val();
+
+        if (($newText !== ("")) && ($newText !== "Write New Prayer...")) {// if statement
+            var $prayerTemplate = $(".template-prayer").html();
+            var $reprayTemplate = $(".template-repray").html();
+
+            div = document.createElement('div');
+            $block = $(div).addClass("prayer-block")
+                .prependTo($(".populate"))
+                .html($prayerTemplate)
+                .find(".prayer-text")
+                .text($newText).parent().css("display", "none").css("opacity", "0").delay(1300)
+                .slideDown(400, function () {
+                    $block.animate({ opacity: "1" }, 400);
+                });
+
+            //if you're creating a universal post.
+            if ($password === "password") {
+                $block.css("border-color", "#4254a4");
+                $block.find(".uni").css("display", "block");
+            }
+
+
+            if (postType2 === "repray-post") {
+                var $reprayblurb = $(".repray-post").find(".user-post").html();
+                $(div).find(".uni").css("display", "block").attr('src', "/images/repray2-icon.svg");
+
+                $(div).find(".repray-fill").append($reprayblurb);
+            }
+
+
+        }//end of if statement
+        if (($newText !== ("")) && ($newText !== "Write New Prayer...")) {
+            $block.find(".sharef").on('click', sharefb);
+            $block.find(".sharet").on('click', sharetwitter);
+            $block.find(".extras li:nth-child(4) img").on('click', hiFive);
+            // $block.find(".extras li:nth-child(1) img").on('click', unfollow);
+            $block.find(".delete-post, .delete-post-block .wrapper div:nth-child(3)").on('click', deletePostBlock);
+            $block.find(".delete-post-block .wrapper div:nth-child(2)").on('click', removePost);
+            //$block.find(" .extras li span").on('click', whosFollowing);
+            $block.find(".extras li:nth-child(3) img").on('click', reprayon);
+            if (postType2 === "repray-post") {
+                reprayoff();
+                var addOne = $CurrentRepray.parent().find("span").text();
+                addOne++;
+                $CurrentRepray.parent().find("span").text(addOne);
+                $CurrentRepray.attr('src', "/images/repray-icon-active.svg");
+
+                $CurrentRepray.parent().parent().parent().find(".all-likes").prepend($reprayTemplate);
+            }
+
+        }
+
+        if (postType === "new-post") {
+            cancelPost();
+        }
+
+    }//////////////////////////////////////////////
+
+
+
+
+
+
+
+
+/*function hiFive(){/////////////////////////////////////////
+
+   var hifives = Math.floor($(this).parent().find("span").text());
+   var $thispost = $(this).parent().parent().parent().find(".all-likes");
+
+if( $(this).attr('src') === "images/hi-five-icon.svg"){
+    hifives++;
+    $(this).parent().find("span").text(hifives);
+    $(this).attr('src',"images/hi-five-icon-active.svg");
+
+    $thispost.prepend($likeTemplate);
+
+}else{
+    hifives--;
+    $(this).parent().find("span").text(hifives);
+    $(this).attr('src',"images/hi-five-icon.svg");
+    $thispost.find(".likeable").remove();
+}
+
+}//////////////////////////////////////////////////////////*/
+
+
+
+
+
+
+
+function unfollow(){///////////////////////////////////////
+  if( $(this).attr('src') === "../images/add-follower.svg"){
+  $(this).attr('src',"../images/unfollow.svg");
+}else{
+  $(this).attr('src',"../images/add-follower.svg");
+}
+
+
+
+}//////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+function deletePostBlock(){////////////////////////////////
+
+  $content.find(".delete-post-block").stop(true,true).fadeOut(300);
+  $(this).stop(true,true).parent().find(".delete-post-block")
+  .stop(true, true).fadeToggle(400);
+
+}//////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+function removePost(){/////////////////////////////////////
+
+  $.ajax({
+      type: "POST",
+      url: "/Home/DeletePost",
+      data: { statusid: $(this).parent().parent().parent().attr('id') },
+      context: this,
+      success: function (data) {
+          if (data == "success") {
+              $(this).stop(true, true).parent().parent().parent()
+  .fadeTo(300, 0).slideUp(300, function () {
+      $(this).remove();
+  });
+          }
+      },
+      traditional: true
+  });
+}//////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+function whosFollowing(){//////////////////////////////////
+  var $allLikes = $(this).parent().parent().parent().find(".all-likes").html();
+  var $this = $(this);
+$CurrentLikes = $this;
+  $(".whosfollowing").css("display","table").css("opacity","0").animate({opacity: "1"},300);
+  $( ".blocker").stop(true,true).fadeToggle(300);
+  $(".whosfollowing ul").html( $allLikes);
+  $(".unfollow-btn").on('click', unfollow);
+  $.ajax({
+      type: "GET",
+      url: "/api/API/GetWhoLiked",
+      data: {
+          postid: $(this).parent().parent().parent().attr('id'),
+      },
+      context: this,
+      success: function (data) {
+          $(".whosfollowing ul").html("");
+          if (data.length == 0)
+              $(".whosfollowing ul").html("No One");
+          else {
+              for (var a = 0; a < data.length; a++) {
+                  if (data[a] != "") {
+                      $(".whosfollowing ul").append(" " + data[a]);
+                  }
+              }
+          }
+      },
+      traditional: true
+  });
+  console.log($CurrentLikes);
+}/////////////////////////////////////////////////////////
+
+
+
+function whosFollowingOff(){/////////////////////////////
+  var newCurrent = $(this).parent().find(".like-activity").html();
+    $(".blocker, .whosfollowing").fadeToggle(300);
+
+    $CurrentLikes.parent().parent().parent().find(".all-likes").html(newCurrent);
+}////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+function reprayon() {
+    document.getElementById("submitprayer").disabled = false;
+    document.getElementById("submitreprayer").disabled = false;
+    window.reprayid = $(this).parent().parent().parent().attr('id');
+    window.requestmsg = $(this).parent().parent().parent().children(".block-id").children("Span").html() + " prayed: " + $(this).parent().parent().parent().children(".prayer-text").text();
+    var picurl = $(".new-post").find(".display-pic").attr("src");
+    $(".wrapper").find(".display-pic").attr("src", picurl);
+    var $user = $(this).parent().parent().parent().find(".block-id span:first-child ").text();
+var $userPost = $(this).parent().parent().parent().find(".prayer-text, .partner-text").text();
+var $userRepost = $(this).parent().parent().parent().find(".repray-fill").text();
+var $userRepost2 = $(this).parent().parent().parent().find(".repray-fill").html();
+var $posttype = $(this).parent().parent().parent().attr('class').split(' ')[0];
+
+var $this = $(this);
+
+$CurrentRepray = $this;
+
+
+
+
+if($posttype === "prayer-block"){
+if($userRepost === ""){
+    $(".repray-post .user-post")
+    .html('<span>' + $user + '</span>' + ' <span>prayed, "' + $userPost + '"</span>');
+}else{
+    $(".repray-post .user-post")
+    .html($userRepost2);
+}
+
+}
+
+if($posttype === "partner-block"){
+    $(".repray-post .user-post")
+    .html('<span>' + $user + '</span>' + ' <span>partnered with the ' + $userPost + '.</span>');
+}
+
+  $(".blocker").fadeIn(300);
+  $(".repray-post").css("display","table");
+  $(".repray-post .container2").transition({width: "calc(100% - 14px)"},300);
+  $(".repray-post .wrapper").delay(300).slideDown(300,function(){init2();})
+  .transition({opacity: "1"},200);
+ 
+  
+
+}
+
+
+
+
+
+
+
+
+function reprayoff(){
+$(".repray-post .wrapper").transition({opacity: "0"},200).slideUp(300);
+ $(".repray-post .container2").delay(500)
+ .transition({width: "calc(100% - 100%)"},300);
+    $(".blocker").delay(800).fadeOut(300, function(){
+       $("textarea").val("Write New Prayer...");
+        $(".repray-post").css("display","none");
+
+    });
+ 
+
+}
+
+
+
+
+
+
+
+
+function init2() {
+
+    var text = document.getElementById('text-2');
+    function resize () {
+        text.style.height = 'auto';
+        text.style.height = text.scrollHeight+'px';
+    }
+    /* 0-timeout to get the already changed text */
+    function delayedResize () {
+        window.setTimeout(resize, 0);
+    }
+    observe(text, 'change',  resize);
+    observe(text, 'cut',     delayedResize);
+    observe(text, 'paste',   delayedResize);
+    observe(text, 'drop',    delayedResize);
+    observe(text, 'keydown', delayedResize);
+
+    text.focus();
+    text.select();
+    resize();
+}
+
+
+function universalPost() {
+
+    if ($uniInput.width() === 0) {
+        $uniBtn.stop(true, true).attr('src', "images/universal-active.svg");
+        $uniInput.show();
+        $uniInput.stop(true, true).transition({ width: "calc(100% - 200px" });
+        $uniInput.focus();
+
+        $(".new-post button").css("background-color", "#4254a4");
+        $(".new-post .green-line").css("background-color", "#4254a4");
+        $(".new-post .uni").css("display", "block");
+    } else {
+        $uniBtn.stop(true, true).attr('src', "images/universal.svg");
+        $uniInput.stop(true, true).transition({ width: "0px" }, function () {
+            $uniInput.hide();
+        });
+        $uniInput.stop(true, true).val("");
+        $(".new-post button").css("background-color", "#00a55e");
+        $(".new-post .green-line").css("background-color", "#00a55e");
+        $(".new-post .uni").css("display", "none");
+    }
+
+}
+
+function newPostContainerAni() {
+
+    document.getElementById("submitprayer").disabled = false;
+    document.getElementById("submitreprayer").disabled = false;
+    $(".new-post .new-post-btn h2, .new-post .new-post-btn img").stop(true, true).fadeOut(100, function(){
+         $(".prayer-message-box").css("min-height","60px");
+        $newPostBtn
+        .transition({width: "20px"}, 300)
+        .transition({scale: .15 }, 200)
+        .transition({top: "30px"}, 200, function(){ 
+            $newPostBtn.stop(true, true).css("display","none")
+        });
+
+        $(".new-post .green-line").stop(true, true)
+        .delay(680)
+        .transition({width:"100%", left:"0px"},300, function(){
+            $(".new-post .wrapper").stop(true, true).slideDown(300).fadeTo(300, 1);
+$('.prayer-message-box').focus();
+         
+
+        });
+
+    });
+
+   
+  
+}
+
+function cancelPost(){
+  $(".prayer-message-box").css("min-height","auto");
+    $uniBtn.stop(true, true).attr('src', "/images/universal.svg");
+    $uniInput.stop(true, true).transition({width:"0px"});
+    $uniInput.stop(true, true).val("");
+      $(".new-post button").css("background-color","#00a55e");
+      $(".new-post .green-line").css("background-color","#00a55e");
+      $(".new-post .uni").css("display","none");
+
+    $(".new-post .wrapper").stop(true, true).fadeTo(300, 0).slideUp(300, function(){
+        $(".new-post .green-line").stop(true, true).transition({width:"0px", left:"50%"},300, function(){
+
+             $newPostBtn.stop(true, true).transition({top: "7px"}, 200)
+             .transition({scale: 1 }, 200)
+             .transition({width: "150px"}, 200) ;
+            $(".new-post .new-post-btn h2, .new-post .new-post-btn img").stop(true, true).delay(550).fadeIn(100);
+
+        });
+          $("textarea").val("Write New Prayer...");
+          init();
+        $newPostBtn.stop(true, true).css("display","block");
+
+    });
+}
+
+
+
+function init () {
+
+    var text = document.getElementById('text');
+    function resize () {
+        text.style.height = 'auto';
+        text.style.height = text.scrollHeight+'px';
+    }
+    /* 0-timeout to get the already changed text */
+    function delayedResize () {
+        window.setTimeout(resize, 0);
+    }
+    observe(text, 'change',  resize);
+    observe(text, 'cut',     delayedResize);
+    observe(text, 'paste',   delayedResize);
+    observe(text, 'drop',    delayedResize);
+    observe(text, 'keydown', delayedResize);
+
+    text.focus();
+    text.select();
+    resize();
+}
+
+
+
+}
